@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>BetaSaisie - Notation Betteraves</title>
+    <!-- Tailwind CSS pour un design moderne et responsive -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome pour les icônes tactiles -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        agri: {
+                            50: '#f2f8f3',
+                            100: '#e2f0e5',
+                            500: '#1e7e34',
+                            600: '#19692c',
+                            700: '#145323',
+                            900: '#0b2f14',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Optimisation pour les écrans tactiles de smartphones */
+        body {
+            -webkit-tap-highlight-color: transparent;
+        }
+        /* Masquer la scrollbar par défaut pour les défilements horizontaux */
+        .scrollbar-none::-webkit-scrollbar {
+            display: none;
+        }
+        .scrollbar-none {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans text-gray-800 min-h-screen pb-12">
+
+    <!-- HEADER DE L'APPLICATION -->
+    <header class="bg-agri-700 text-white shadow-md sticky top-0 z-50 px-4 py-3 flex justify-between items-center select-none">
+        <div class="flex items-center space-x-2">
+            <i class="fa-solid fa-seedling text-xl text-green-300"></i>
+            <h1 class="text-lg font-bold tracking-tight">BetaSaisie 🌿</h1>
+        </div>
+        <span id="badge-offline" class="bg-green-600 text-xs px-2 py-1 rounded-full flex items-center gap-1">
+            <i class="fa-solid fa-cloud-arrow-up text-xxs"></i> Hors-ligne OK
+        </span>
+    </header>
+
+    <main class="max-w-md mx-auto px-3 py-4 space-y-4">
+
+        <!-- ÉTAPE 1 : CONFIGURATION DE L'ESSAI -->
+        <section id="step-config" class="bg-white rounded-2xl p-4 shadow-sm border border-gray-200">
+            <div class="flex items-center space-x-2 mb-4 border-b pb-2 select-none">
+                <span class="bg-agri-100 text-agri-700 w-8 h-8 rounded-full flex items-center justify-center font-bold">1</span>
+                <h2 class="text-base font-bold text-gray-900">Configuration de l'essai</h2>
+            </div>
+
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1 select-none">Nom de l'essai</label>
+                    <input type="text" id="trial-name" value="Essai Betteraves 2026" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-agri-500 focus:outline-none focus:bg-white text-gray-900 font-medium">
+                </div>
+
+                <div class="grid grid-cols-3 gap-2">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1 select-none">Modalités</label>
+                        <input type="number" id="nb-modalities" value="4" min="1" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-agri-500 text-center text-gray-900 font-medium focus:bg-white">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1 select-none">Blocs</label>
+                        <input type="number" id="nb-blocks" value="3" min="1" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-agri-500 text-center text-gray-900 font-medium focus:bg-white">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1 select-none">Obs. / mod.</label>
+                        <input type="number" id="nb-obs" value="5" min="1" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-agri-500 text-center text-gray-900 font-medium focus:bg-white">
+                    </div>
+                </div>
+
+                <!-- CHOIX DES VARIABLES -->
+                <div>
+                    <div class="flex justify-between items-center mb-2 select-none">
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500">Variables à saisir</label>
+                        <div class="space-x-2">
+                            <button onclick="toggleAllVars(true)" class="text-xs text-agri-600 font-bold hover:underline">Tout cocher</button>
+                            <span class="text-gray-300">|</span>
+                            <button onclick="toggleAllVars(false)" class="text-xs text-gray-500 hover:underline">Effacer</button>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-gray-50 border border-gray-200 rounded-xl p-3 max-h-60 overflow-y-auto space-y-2 text-sm" id="variables-container">
+                        <!-- Généré dynamiquement en JS -->
+                    </div>
+                </div>
+
+                <button onclick="generateTrialPlan()" class="w-full bg-agri-600 hover:bg-agri-700 text-white font-bold py-3 px-4 rounded-xl shadow-sm transition flex items-center justify-center space-x-2 select-none">
+                    <i class="fa-solid fa-calculator"></i>
+                    <span>Générer le plan de parcelles</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- ÉTAPE 2 : INTERFACE DE SAISIE TACTILE ET CLAVIER -->
+        <section id="step-entry" class="hidden bg-white rounded-2xl p-4 shadow-sm border border-gray-200">
+            <div class="flex items-center justify-between border-b pb-3 mb-3 select-none">
+                <div class="flex items-center space-x-2">
+                    <span class="bg-agri-100 text-agri-700 w-8 h-8 rounded-full flex items-center justify-center font-bold">2</span>
+                    <h2 class="text-base font-bold text-gray-900">Saisie au champ</h2>
+                </div>
+                <button onclick="showConfig()" class="text-xs text-gray-500 border border-gray-300 rounded-lg px-2.5 py-1 flex items-center gap-1 active:bg-gray-100">
+                    <i class="fa-solid fa-cog"></i> Config
+                </button>
+            </div>
+
+            <!-- SÉLECTEUR DE PARCELLE UNIQUE -->
+            <div class="flex items-center justify-between bg-gray-50 rounded-xl p-2 border border-gray-200 mb-3 select-none">
+                <button onclick="navigatePlotGroup(-1)" class="w-12 h-12 bg-white active:bg-gray-200 text-gray-700 border border-gray-300 rounded-lg shadow-sm flex items-center justify-center">
+                    <i class="fa-solid fa-chevron-left text-lg"></i>
+                </button>
+                <div class="text-center flex-1">
+                    <div class="text-xs uppercase font-semibold text-gray-400">Parcelle en cours</div>
+                    <select id="plot-selector" onchange="onPlotSelectChange()" class="text-xl font-bold text-agri-700 bg-transparent border-none focus:outline-none text-center py-1 cursor-pointer">
+                        <!-- Options générées dynamiquement -->
+                    </select>
+                    <div id="plot-sub-info" class="text-xxs text-gray-500 font-medium">Bloc 1 | Mod 1</div>
+                </div>
+                <button onclick="navigatePlotGroup(1)" class="w-12 h-12 bg-white active:bg-gray-200 text-gray-700 border border-gray-300 rounded-lg shadow-sm flex items-center justify-center">
+                    <i class="fa-solid fa-chevron-right text-lg"></i>
+                </button>
+            </div>
+
+            <!-- SÉLECTEUR D'OBSERVATION RAPIDE (S'affiche si nbObs > 1) -->
+            <div id="obs-selector-container" class="mb-4 bg-gray-50 p-2.5 rounded-xl border border-gray-200 hidden select-none">
+                <!-- Les boutons d'observations Obs 1, Obs 2 seront injectés ici -->
+            </div>
+
+            <!-- Indicateur de progression globale -->
+            <div class="w-full bg-gray-100 rounded-full h-1.5 mb-4 select-none">
+                <div id="progress-bar" class="bg-agri-500 h-1.5 rounded-full" style="width: 0%"></div>
+            </div>
+
+            <!-- FORMULAIRE DYNAMIQUE DE SAISIE HYBRIDE -->
+            <div id="dynamic-inputs" class="space-y-4">
+                <!-- Les entrées clavier/tactiles s'affichent ici selon les choix de l'utilisateur -->
+            </div>
+
+            <!-- Bouton Validation Express -->
+            <div class="mt-6 pt-4 border-t border-gray-100 select-none">
+                <button onclick="saveCurrentPlotAndNext()" class="w-full bg-agri-600 hover:bg-agri-700 text-white font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 active:scale-95 transition">
+                    <i class="fa-solid fa-floppy-disk"></i>
+                    <span>Sauvegarder & Suivant</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- ÉTAPE 3 : EXPORT DES DONNÉES -->
+        <section id="step-export" class="hidden bg-white rounded-2xl p-4 shadow-sm border border-gray-200 select-none">
+            <div class="flex items-center space-x-2 mb-4 border-b pb-2">
+                <span class="bg-agri-100 text-agri-700 w-8 h-8 rounded-full flex items-center justify-center font-bold">3</span>
+                <h2 class="text-base font-bold text-gray-900">Données & Export</h2>
+            </div>
+            
+            <p class="text-xs text-gray-500 mb-4">
+                Toutes les parcelles saisies sont récapitulées ci-dessous. Vos modifications sont conservées sur cet appareil.
+            </p>
+
+            <div class="grid grid-cols-2 gap-2 mb-4">
+                <button onclick="exportToCSV()" class="bg-green-600 hover:bg-green-700 text-white text-sm font-bold py-2.5 px-3 rounded-lg flex items-center justify-center gap-2 shadow-sm">
+                    <i class="fa-solid fa-file-csv"></i> Exporter CSV
+                </button>
+                <button onclick="confirmResetAll()" class="bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 text-sm font-bold py-2.5 px-3 rounded-lg flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-trash-can"></i> Réinitialiser
+                </button>
+            </div>
+
+            <!-- Tableau récapitulatif (scroll horizontal sur mobile) -->
+            <div class="overflow-x-auto border border-gray-200 rounded-xl">
+                <table class="min-w-full divide-y divide-gray-200 text-xs text-left" id="summary-table">
+                    <!-- Tête et corps générés dynamiquement -->
+                </table>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- TOAST ET ALERTE MODERNE (Remplace alert()) -->
+    <div id="toast" class="fixed bottom-5 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-xs px-4 py-3 rounded-xl shadow-lg flex items-center gap-2 opacity-0 pointer-events-none transition-all duration-300 z-50 max-w-xs w-11/12 justify-center select-none">
+        <i id="toast-icon" class="fa-solid fa-circle-check text-green-400"></i>
+        <span id="toast-message" class="font-medium text-center">Données enregistrées</span>
+    </div>
+
+    <!-- MODAL DE CONFIRMATION PERSONNALISÉ (Remplace confirm()) -->
+    <div id="custom-confirm-modal" class="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 hidden opacity-0 transition-opacity duration-200 select-none">
+        <div class="bg-white rounded-2xl p-5 max-w-xs w-full shadow-2xl transform scale-95 transition-transform duration-200">
+            <div class="text-red-600 text-3xl mb-3 text-center">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <h3 class="text-base font-bold text-gray-900 text-center mb-2" id="confirm-title">Attention</h3>
+            <p class="text-xs text-gray-500 text-center mb-5" id="confirm-message">Voulez-vous vraiment continuer ?</p>
+            <div class="flex space-x-2">
+                <button id="confirm-cancel-btn" class="flex-1 py-2.5 bg-gray-100 hover:bg-gray-200 active:bg-gray-300 rounded-xl text-xs font-bold text-gray-700 transition">Annuler</button>
+                <button id="confirm-ok-btn" class="flex-1 py-2.5 bg-red-600 hover:bg-red-700 active:bg-red-800 rounded-xl text-xs font-bold text-white transition">Confirmer</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // LISTE COMPLÈTE DES VARIABLES DE L'UTILISATEUR
+        const VARIABLES_CONFIG = [
+            { id: "puc_apt_vert", label: "Pucerons aptères verts / pl", category: "Pucerons", type: "number", step: 0.1, default: 0 },
+            { id: "puc_ail_vert", label: "Pucerons ailés verts / pl", category: "Pucerons", type: "number", step: 0.1, default: 0 },
+            { id: "puc_apt_noir", label: "Pucerons aptères noirs / pl", category: "Pucerons", type: "number", step: 1, default: 0 },
+            { id: "puc_ail_noir", label: "Pucerons ailés noirs / pl", category: "Pucerons", type: "number", step: 1, default: 0 },
+            { id: "selectivite", label: "Sélectivité (0 à 10)", category: "Efficacité", type: "range", min: 0, max: 10, default: 10 },
+            { id: "efficacite", label: "Efficacité (0 à 10)", category: "Efficacité", type: "range", min: 0, max: 10, default: 10 },
+            { id: "type_adventice", label: "Type d'adventice", category: "Efficacité", type: "text", default: "" },
+            { id: "grav_cerco", label: "Gravité Cercosporiose (0-10)", category: "Maladies", type: "range", min: 0, max: 10, default: 0 },
+            { id: "grav_oidium", label: "Gravité Oïdium (0-10)", category: "Maladies", type: "range", min: 0, max: 10, default: 0 },
+            { id: "grav_rouille", label: "Gravité Rouille (0-10)", category: "Maladies", type: "range", min: 0, max: 10, default: 0 },
+            { id: "grav_ramu", label: "Gravité Ramulariose (0-10)", category: "Maladies", type: "range", min: 0, max: 10, default: 0 },
+            { id: "pct_jaunisse", label: "% Jaunisse", category: "Jaunisse", type: "range", min: 0, max: 100, default: 0 },
+            { id: "grav_jaunisse", label: "Gravité Jaunisse (0-10)", category: "Jaunisse", type: "range", min: 0, max: 10, default: 0 },
+            { id: "nb_montee", label: "Nombre de montées", category: "Divers", type: "number", step: 1, default: 0 },
+            { id: "nb_mildiou", label: "Nombre de mildiou", category: "Divers", type: "number", step: 1, default: 0 }
+        ];
+
+        // ÉTAT DE L'APPLICATION
+        let appState = {
+            trialName: "Essai Betteraves 2026",
+            nbModalities: 4,
+            nbBlocks: 3,
+            nbObs: 5,
+            selectedVars: ["puc_apt_vert", "puc_ail_vert", "selectivite", "efficacite", "grav_cerco", "pct_jaunisse", "grav_jaunisse", "nb_montee", "nb_mildiou"], // Variables par défaut
+            plots: [], 
+            currentPlotIndex: 0, 
+            activeObs: 1 
+        };
+
+        // CHARGEMENT INITIAL
+        window.onload = function() {
+            initVariablesList();
+            loadStateFromLocalStorage();
+            updateUI();
+        };
+
+        // Rendu de la liste des cases à cocher pour les variables
+        function initVariablesList() {
+            const container = document.getElementById("variables-container");
+            container.innerHTML = "";
+            
+            let lastCat = "";
+            VARIABLES_CONFIG.forEach(v => {
+                if (v.category !== lastCat) {
+                    lastCat = v.category;
+                    const catTitle = document.createElement("div");
+                    catTitle.className = "text-xxs font-bold uppercase tracking-wide text-agri-700 mt-3 border-b border-gray-100 pb-1 select-none";
+                    catTitle.innerText = lastCat;
+                    container.appendChild(catTitle);
+                }
+
+                const label = document.createElement("label");
+                label.className = "flex items-center space-x-3 py-1 cursor-pointer active:bg-gray-100 rounded px-1 select-none";
+                
+                const isChecked = appState.selectedVars.includes(v.id) ? "checked" : "";
+                label.innerHTML = `
+                    <input type="checkbox" value="${v.id}" ${isChecked} class="var-checkbox h-4.5 w-4.5 rounded text-agri-600 focus:ring-agri-500 border-gray-300">
+                    <span class="text-gray-700 font-medium">${v.label}</span>
+                `;
+                container.appendChild(label);
+            });
+        }
+
+        function toggleAllVars(check) {
+            document.querySelectorAll(".var-checkbox").forEach(cb => {
+                cb.checked = check;
+            });
+        }
+
+        // NAVIGATION DU MENU CONFIGURATION / CHAMP
+        function showConfig() {
+            document.getElementById("step-config").classList.remove("hidden");
+            document.getElementById("step-entry").classList.add("hidden");
+            document.getElementById("step-export").classList.add("hidden");
+        }
+
+        // GÉNÉRER LE PLAN DE PARCELLES
+        function generateTrialPlan() {
+            // Lecture config
+            appState.trialName = document.getElementById("trial-name").value;
+            appState.nbModalities = parseInt(document.getElementById("nb-modalities").value) || 1;
+            appState.nbBlocks = parseInt(document.getElementById("nb-blocks").value) || 1;
+            appState.nbObs = parseInt(document.getElementById("nb-obs").value) || 1;
+
+            // Lecture variables sélectionnées
+            appState.selectedVars = [];
+            document.querySelectorAll(".var-checkbox:checked").forEach(cb => {
+                appState.selectedVars.push(cb.value);
+            });
+
+            if (appState.selectedVars.length === 0) {
+                showToast("Sélectionnez au moins une variable à noter !", true);
+                return;
+            }
+
+            // Génération des parcelles et de leurs sous-observations
+            appState.plots = [];
+            for (let b = 1; b <= appState.nbBlocks; b++) {
+                for (let m = 1; m <= appState.nbModalities; m++) {
+                    for (let o = 1; o <= appState.nbObs; o++) {
+                        const plotNum = (b * 100) + m;
+                        const plotId = appState.nbObs > 1 ? `${plotNum} - O${o}` : `${plotNum}`;
+                        
+                        // Initialisation des valeurs par défaut pour les variables choisies
+                        const values = {};
+                        appState.selectedVars.forEach(vId => {
+                            const conf = VARIABLES_CONFIG.find(item => item.id === vId);
+                            values[vId] = conf ? conf.default : "";
+                        });
+
+                        appState.plots.push({
+                            id: plotId,
+                            plotNum: plotNum,
+                            bloc: b,
+                            mod: m,
+                            obs: o,
+                            values: values,
+                            isCompleted: false
+                        });
+                    }
+                }
+            }
+
+            appState.currentPlotIndex = 0;
+            appState.activeObs = 1;
+            saveStateToLocalStorage();
+            updateUI();
+            
+            // Masquer la config et afficher la saisie
+            document.getElementById("step-config").classList.add("hidden");
+            document.getElementById("step-entry").classList.remove("hidden");
+            document.getElementById("step-export").classList.remove("hidden");
+
+            showToast("Plan généré ! " + appState.plots.length + " observations prêtes.");
+        }
+
+        // METTRE À JOUR L'INTERFACE DE SAISIE ET DE SYNTHÈSE
+        function updateUI() {
+            if (appState.plots.length === 0) {
+                document.getElementById("step-entry").classList.add("hidden");
+                document.getElementById("step-export").classList.add("hidden");
+                return;
+            }
+
+            // Mettre à jour le champ de saisie du nom de l'essai dans la configuration au cas où
+            const trialNameInput = document.getElementById("trial-name");
+            if (trialNameInput && trialNameInput.value !== appState.trialName) {
+                trialNameInput.value = appState.trialName;
+            }
+
+            // Afficher les sections
+            document.getElementById("step-entry").classList.remove("hidden");
+            document.getElementById("step-export").classList.remove("hidden");
+
+            // Remplir le sélecteur avec les numéros de parcelles UNIQUES
+            const selector = document.getElementById("plot-selector");
+            selector.innerHTML = "";
+            const uniquePlotNums = [...new Set(appState.plots.map(p => p.plotNum))];
+
+            uniquePlotNums.forEach(plotNum => {
+                const obsOfPlot = appState.plots.filter(p => p.plotNum === plotNum);
+                const allDone = obsOfPlot.every(p => p.isCompleted);
+                const countDone = obsOfPlot.filter(p => p.isCompleted).length;
+
+                const opt = document.createElement("option");
+                opt.value = plotNum;
+                opt.innerText = `Parcelle ${plotNum} ${allDone ? '✅' : `(${countDone}/${appState.nbObs})`}`;
+                selector.appendChild(opt);
+            });
+
+            // Synchroniser le sélecteur sur la parcelle courante
+            const currentPlot = appState.plots[appState.currentPlotIndex];
+            if (currentPlot) {
+                selector.value = currentPlot.plotNum;
+                appState.activeObs = currentPlot.obs;
+            }
+
+            // Rendre la rangée d'onglets pour les observations de cette parcelle
+            renderObservationTabs(currentPlot ? currentPlot.plotNum : uniquePlotNums[0]);
+
+            // Charger les inputs pour la parcelle et l'observation active
+            loadPlotData(appState.currentPlotIndex);
+            
+            // Barre de progression globale
+            const completedCount = appState.plots.filter(p => p.isCompleted).length;
+            const pct = (completedCount / appState.plots.length) * 100;
+            document.getElementById("progress-bar").style.width = pct + "%";
+
+            // Générer le tableau récapitulatif
+            renderSummaryTable();
+        }
+
+        // Rendre les onglets horizontaux pour changer d'observation rapidement
+        function renderObservationTabs(plotNum) {
+            const container = document.getElementById("obs-selector-container");
+            if (appState.nbObs > 1) {
+                container.classList.remove("hidden");
+                container.innerHTML = `<div class="text-xs font-semibold text-gray-400 mb-2 uppercase tracking-wide">Plante / Observation à saisir</div>`;
+                
+                const grid = document.createElement("div");
+                grid.className = "flex gap-1.5 overflow-x-auto pb-1 scrollbar-none";
+
+                const siblingPlots = appState.plots.filter(p => p.plotNum === plotNum);
+                siblingPlots.forEach(p => {
+                    const btn = document.createElement("button");
+                    btn.type = "button";
+                    btn.onclick = () => selectObservation(p.obs);
+
+                    const isActive = p.obs === appState.activeObs;
+                    const isDone = p.isCompleted;
+
+                    btn.className = `flex-none min-w-[65px] py-2 px-2.5 text-xs font-bold rounded-lg transition-all ${
+                        isActive 
+                        ? 'bg-agri-600 text-white shadow-md scale-105' 
+                        : isDone 
+                            ? 'bg-green-100 text-green-800 border border-green-300' 
+                            : 'bg-white text-gray-600 border border-gray-300'
+                    }`;
+                    btn.innerText = `Obs ${p.obs} ${isDone ? '✓' : ''}`;
+                    grid.appendChild(btn);
+                });
+                container.appendChild(grid);
+            } else {
+                container.classList.add("hidden");
+                container.innerHTML = "";
+            }
+        }
+
+        function selectObservation(obsNum) {
+            const currentPlot = appState.plots[appState.currentPlotIndex];
+            const idx = appState.plots.findIndex(p => p.plotNum === currentPlot.plotNum && p.obs === obsNum);
+            if (idx !== -1) {
+                appState.currentPlotIndex = idx;
+                appState.activeObs = obsNum;
+                updateUI();
+            }
+        }
+
+        // CHARGER LES FORMULAIRES DE SAISIE DIRECTE POUR L'OBSERVATION COURANTE
+        function loadPlotData(idx) {
+            const plot = appState.plots[idx];
+            if (!plot) return;
+
+            document.getElementById("plot-sub-info").innerText = `Bloc ${plot.bloc} | Modalité ${plot.mod} ${appState.nbObs > 1 ? '| Obs ' + plot.obs + ' / ' + appState.nbObs : ''}`;
+
+            const container = document.getElementById("dynamic-inputs");
+            container.innerHTML = "";
+
+            appState.selectedVars.forEach(vId => {
+                const conf = VARIABLES_CONFIG.find(item => item.id === vId);
+                if (!conf) return;
+
+                const value = plot.values[vId];
+                const inputGroup = document.createElement("div");
+                inputGroup.className = "bg-gray-50 p-3.5 rounded-xl border border-gray-200 shadow-sm";
+
+                // En-tête de la variable
+                let headerHTML = `
+                    <div class="flex justify-between items-center mb-1.5">
+                        <span class="text-xs font-bold uppercase tracking-wider text-gray-400">${conf.category}</span>
+                        <span class="text-sm font-bold text-gray-800">${conf.label}</span>
+                    </div>
+                `;
+                inputGroup.innerHTML = headerHTML;
+
+                // Corps de l'input optimisé : Saisie directe + raccourcis tactiles
+                if (conf.type === 'number') {
+                    // Pour les pucerons, montées et mildiou : pavé numérique avec boutons d'incrément (+/-)
+                    const inc = conf.step;
+                    inputGroup.innerHTML += `
+                        <div class="flex items-center space-x-2">
+                            <button type="button" onclick="changeNumValue('${vId}', -${inc})" class="w-12 h-12 bg-white active:bg-gray-200 border border-gray-300 rounded-xl text-lg font-bold flex items-center justify-center shadow-sm select-none">-</button>
+                            <input type="number" id="input-${vId}" step="${conf.step}" value="${value}" onchange="updateValueFromInput('${vId}')" class="flex-1 h-12 text-center text-lg font-bold border border-gray-300 rounded-xl focus:ring-2 focus:ring-agri-500 focus:outline-none focus:bg-white text-gray-900">
+                            <button type="button" onclick="changeNumValue('${vId}', ${inc})" class="w-12 h-12 bg-white active:bg-gray-200 border border-gray-300 rounded-xl text-lg font-bold flex items-center justify-center shadow-sm select-none">+</button>
+                        </div>
+                    `;
+                } else if (conf.type === 'range') {
+                    // Pour les gravités et l'efficacité : saisie directe clavier OU boutons rapides 0-10
+                    const isPct = conf.max === 100;
+                    
+                    let inputsHTML = `
+                        <div class="space-y-2">
+                            <div class="flex items-center space-x-2">
+                                <span class="text-xs text-gray-400 font-semibold select-none">Saisie :</span>
+                                <input type="number" id="input-${vId}" min="${conf.min}" max="${conf.max}" value="${value}" oninput="updateValueFromInput('${vId}')" class="w-24 h-9 text-center text-sm font-bold border border-gray-300 rounded-lg focus:ring-2 focus:ring-agri-500 focus:outline-none focus:bg-white text-gray-900">
+                                <span class="text-xs text-gray-500 font-bold select-none">${isPct ? '%' : '/ 10'}</span>
+                            </div>
+                            
+                            <div class="text-xxs font-semibold text-gray-400 select-none">Raccourcis tactiles :</div>
+                            <div class="flex gap-1 overflow-x-auto pb-1 scrollbar-none select-none">
+                    `;
+
+                    if (isPct) {
+                        // Paliers tactiles rapides pour le % Jaunisse (0, 10, 20... 100)
+                        for (let val = 0; val <= 100; val += 10) {
+                            const isSelected = parseInt(value) === val;
+                            inputsHTML += `
+                                <button type="button" onclick="setQuickValue('${vId}', ${val})" id="btn-${vId}-${val}" class="quick-btn-${vId} text-xxs font-bold px-2.5 py-1.5 rounded-lg border flex-none ${
+                                    isSelected 
+                                    ? 'bg-agri-600 text-white border-agri-600 shadow-sm scale-105' 
+                                    : 'bg-white text-gray-600 border-gray-200 active:bg-gray-100'
+                                }">${val}%</button>
+                            `;
+                        }
+                    } else {
+                        // Valeurs circulaires tactiles rapides de 0 à 10 pour l'efficacité et les maladies
+                        for (let val = 0; val <= 10; val++) {
+                            const isSelected = value !== "" && parseInt(value) === val;
+                            inputsHTML += `
+                                <button type="button" onclick="setQuickValue('${vId}', ${val})" id="btn-${vId}-${val}" class="quick-btn-${vId} text-xs font-bold w-8 h-8 rounded-full border flex-none flex items-center justify-center ${
+                                    isSelected 
+                                    ? 'bg-agri-600 text-white border-agri-600 shadow-sm scale-11' 
+                                    : 'bg-white text-gray-600 border-gray-200 active:bg-gray-100'
+                                }">${val}</button>
+                            `;
+                        }
+                    }
+                    inputsHTML += `
+                            </div>
+                        </div>
+                    `;
+                    inputGroup.innerHTML += inputsHTML;
+                } else {
+                    // Texte (ex: type d'adventice)
+                    inputGroup.innerHTML += `
+                        <input type="text" id="input-${vId}" value="${value}" onchange="updateValueFromInput('${vId}')" placeholder="Saisir l'adventice..." class="w-full h-11 border border-gray-300 rounded-lg px-3 text-sm focus:outline-none focus:ring-2 focus:ring-agri-500 focus:bg-white text-gray-900">
+                    `;
+                }
+
+                container.appendChild(inputGroup);
+            });
+        }
+
+        // MAJ de la valeur à la volée avec les boutons +/-
+        function changeNumValue(varId, delta) {
+            const input = document.getElementById(`input-${varId}`);
+            if (!input) return;
+            let val = parseFloat(input.value) || 0;
+            val = Math.round((val + delta) * 10) / 10; // Éviter les dérives flottantes JS
+            if (val < 0) val = 0; // Pas de valeurs négatives au champ
+            input.value = val;
+            updateValueFromInput(varId);
+        }
+
+        // Clic sur les boutons de 0 à 10 ou les pourcentages
+        function setQuickValue(varId, val) {
+            const input = document.getElementById(`input-${varId}`);
+            if (input) {
+                input.value = val;
+                updateValueFromInput(varId);
+                
+                // Mettre à jour visuellement les boutons actifs de la variable
+                document.querySelectorAll(`.quick-btn-${varId}`).forEach(btn => {
+                    btn.classList.remove('bg-agri-600', 'text-white', 'border-agri-600', 'shadow-sm', 'scale-105', 'scale-11');
+                    btn.classList.add('bg-white', 'text-gray-600', 'border-gray-200');
+                });
+                
+                const activeBtn = document.getElementById(`btn-${varId}-${val}`);
+                if (activeBtn) {
+                    activeBtn.classList.remove('bg-white', 'text-gray-600', 'border-gray-200');
+                    const isPct = varId === "pct_jaunisse";
+                    activeBtn.classList.add('bg-agri-600', 'text-white', 'border-agri-600', 'shadow-sm', isPct ? 'scale-105' : 'scale-11');
+                }
+            }
+        }
+
+        // Mettre à jour l'état après une modification
+        function updateValueFromInput(varId) {
+            const input = document.getElementById(`input-${varId}`);
+            if (!input) return;
+            
+            const currentPlot = appState.plots[appState.currentPlotIndex];
+            currentPlot.values[varId] = input.value;
+            currentPlot.isCompleted = true; // Saisie commencée = parcelle validée
+
+            saveStateToLocalStorage();
+        }
+
+        // NAVIGATION ENTRE LES PARCELLES UNIQUES
+        function navigatePlotGroup(direction) {
+            const uniquePlotNums = [...new Set(appState.plots.map(p => p.plotNum))];
+            const currentPlot = appState.plots[appState.currentPlotIndex];
+            if (!currentPlot) return;
+
+            const currentGroupIdx = uniquePlotNums.indexOf(currentPlot.plotNum);
+            let nextGroupIdx = currentGroupIdx + direction;
+
+            if (nextGroupIdx >= 0 && nextGroupIdx < uniquePlotNums.length) {
+                const targetPlotNum = uniquePlotNums[nextGroupIdx];
+                // Charger la première observation de cette nouvelle parcelle
+                const targetIdx = appState.plots.findIndex(p => p.plotNum === targetPlotNum && p.obs === 1);
+                if (targetIdx !== -1) {
+                    appState.currentPlotIndex = targetIdx;
+                    appState.activeObs = 1;
+                    updateUI();
+                }
+            }
+        }
+
+        function onPlotSelectChange() {
+            const selectedPlotNum = parseInt(document.getElementById("plot-selector").value);
+            // On conserve l'observation active si elle existe pour cette nouvelle parcelle, sinon on charge la première
+            let idx = appState.plots.findIndex(p => p.plotNum === selectedPlotNum && p.obs === appState.activeObs);
+            if (idx === -1) {
+                idx = appState.plots.findIndex(p => p.plotNum === selectedPlotNum);
+            }
+            if (idx !== -1) {
+                appState.currentPlotIndex = idx;
+                appState.activeObs = appState.plots[idx].obs;
+                updateUI();
+            }
+        }
+
+        // VALIDATION ET REBOND AUTOMATIQUE SUR L'OBSERVATION SUIVANTE
+        function saveCurrentPlotAndNext() {
+            // Marquer l'observation courante comme validée
+            appState.plots[appState.currentPlotIndex].isCompleted = true;
+            
+            showToast(`Obs. ${appState.activeObs} de la parcelle ${appState.plots[appState.currentPlotIndex].plotNum} validée !`);
+
+            if (appState.currentPlotIndex < appState.plots.length - 1) {
+                appState.currentPlotIndex++;
+                appState.activeObs = appState.plots[appState.currentPlotIndex].obs;
+                updateUI();
+            } else {
+                updateUI();
+                showToast("🎉 Toutes les parcelles ont été complétées !", false);
+            }
+        }
+
+        // RECAPITULATIF ET TABLEAU DES RESULTATS
+        function renderSummaryTable() {
+            const table = document.getElementById("summary-table");
+            table.innerHTML = "";
+
+            // En-têtes
+            const thead = document.createElement("thead");
+            thead.className = "bg-gray-50 border-b border-gray-200";
+            
+            let headersHTML = `
+                <tr>
+                    <th class="px-3 py-2 font-semibold text-gray-700">Parcelle</th>
+                    <th class="px-2 py-2 font-semibold text-gray-700">Bloc</th>
+                    <th class="px-2 py-2 font-semibold text-gray-700">Mod</th>
+                    <th class="px-2 py-2 font-semibold text-gray-700">Obs</th>
+            `;
+            
+            appState.selectedVars.forEach(vId => {
+                const conf = VARIABLES_CONFIG.find(item => item.id === vId);
+                headersHTML += `<th class="px-2 py-2 font-semibold text-gray-700">${conf ? conf.label.split('(')[0] : vId}</th>`;
+            });
+            headersHTML += `</tr>`;
+            thead.innerHTML = headersHTML;
+            table.appendChild(thead);
+
+            // Données
+            const tbody = document.createElement("tbody");
+            tbody.className = "divide-y divide-gray-100 bg-white";
+            
+            appState.plots.forEach((p, plotIdx) => {
+                const tr = document.createElement("tr");
+                tr.className = p.isCompleted ? "bg-green-50/40 hover:bg-green-50" : "hover:bg-gray-50";
+                
+                let rowHTML = `
+                    <td class="px-3 py-2.5 font-bold text-agri-700 cursor-pointer" onclick="goToPlot(${plotIdx})">${p.plotNum} ${p.isCompleted ? '✅' : ''}</td>
+                    <td class="px-2 py-2.5 text-gray-500">${p.bloc}</td>
+                    <td class="px-2 py-2.5 text-gray-500">${p.mod}</td>
+                    <td class="px-2 py-2.5 text-gray-400 font-bold">O${p.obs}</td>
+                `;
+
+                appState.selectedVars.forEach(vId => {
+                    const val = p.values[vId] !== undefined ? p.values[vId] : "-";
+                    rowHTML += `<td class="px-2 py-2.5 font-medium">${val}</td>`;
+                });
+
+                tr.innerHTML = rowHTML;
+                tbody.appendChild(tr);
+            });
+            table.appendChild(tbody);
+        }
+
+        function goToPlot(idx) {
+            appState.currentPlotIndex = idx;
+            appState.activeObs = appState.plots[idx].obs;
+            updateUI();
+            window.scrollTo({ top: 180, behavior: 'smooth' });
+        }
+
+        // EXPORTER AU FORMAT CSV
+        function exportToCSV() {
+            if (appState.plots.length === 0) return;
+
+            // Créer les lignes CSV avec BOM UTF-8 pour les accents sous Excel
+            let csvContent = "\uFEFF"; 
+            
+            // Ligne en-tête
+            let headers = ["Essai", "Parcelle", "Bloc", "Modalite", "Observation"];
+            appState.selectedVars.forEach(vId => {
+                const conf = VARIABLES_CONFIG.find(item => item.id === vId);
+                headers.push(conf ? conf.label : vId);
+            });
+            csvContent += headers.map(h => `"${h.replace(/"/g, '""')}"`).join(";") + "\n";
+
+            // Lignes de données
+            appState.plots.forEach(p => {
+                let row = [
+                    appState.trialName,
+                    p.plotNum,
+                    p.bloc,
+                    p.mod,
+                    p.obs
+                ];
+                appState.selectedVars.forEach(vId => {
+                    row.push(p.values[vId]);
+                });
+                csvContent += row.map(val => `"${String(val).replace(/"/g, '""')}"`).join(";") + "\n";
+            });
+
+            // Téléchargement du fichier
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            const cleanName = appState.trialName.toLowerCase().replace(/[^a-z0-9]/g, "_");
+            link.setAttribute("href", url);
+            link.setAttribute("download", `notation_agri_${cleanName}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // SAUVEGARDE ET CHARGEMENT LOCALE DANS LE NAVIGATEUR MOBILE
+        function saveStateToLocalStorage() {
+            localStorage.setItem("agro_saisie_state", JSON.stringify(appState));
+        }
+
+        function loadStateFromLocalStorage() {
+            const saved = localStorage.getItem("agro_saisie_state");
+            if (saved) {
+                try {
+                    const parsed = JSON.parse(saved);
+                    // S'assurer que les nouvelles variables sont ajoutées à selectedVars si les anciennes données n'avaient pas la clé
+                    if (parsed.selectedVars && !parsed.selectedVars.includes("nb_mildiou")) {
+                        parsed.selectedVars.push("nb_mildiou");
+                    }
+                    appState = parsed;
+                } catch (e) {
+                    console.error("Erreur de chargement des données locales", e);
+                }
+            }
+        }
+
+        // CONFIRMATION DE REMISE À ZÉRO PERSONNALISÉE
+        function confirmResetAll() {
+            showCustomConfirm(
+                "Effacer les données ?", 
+                "⚠️ Attention : Cette action va supprimer définitivement l'essai en cours et toutes les notations déjà enregistrées.",
+                function() {
+                    localStorage.removeItem("agro_saisie_state");
+                    appState.plots = [];
+                    appState.currentPlotIndex = 0;
+                    appState.activeObs = 1;
+                    showConfig();
+                    updateUI();
+                    showToast("Application réinitialisée.");
+                }
+            );
+        }
+
+        // GESTION DU POPUP DE CONFIRMATION SANS APPELER DE POPUPS WINDOWS (confirm())
+        let confirmCallback = null;
+        function showCustomConfirm(title, message, callback) {
+            document.getElementById("confirm-title").innerText = title;
+            document.getElementById("confirm-message").innerText = message;
+            confirmCallback = callback;
+            
+            const modal = document.getElementById("custom-confirm-modal");
+            modal.classList.remove("hidden");
+            setTimeout(() => {
+                modal.classList.remove("opacity-0");
+                modal.firstElementChild.classList.remove("scale-95");
+            }, 10);
+        }
+
+        function hideCustomConfirm() {
+            const modal = document.getElementById("custom-confirm-modal");
+            modal.classList.add("opacity-0");
+            modal.firstElementChild.classList.add("scale-95");
+            setTimeout(() => {
+                modal.classList.add("hidden");
+            }, 200);
+        }
+
+        document.getElementById("confirm-cancel-btn").onclick = hideCustomConfirm;
+        document.getElementById("confirm-ok-btn").onclick = function() {
+            if (confirmCallback) confirmCallback();
+            hideCustomConfirm();
+        };
+
+        // NOTIFICATIONS TOAST MODERNES
+        function showToast(msg, isError = false) {
+            const toast = document.getElementById("toast");
+            const icon = document.getElementById("toast-icon");
+            
+            if (isError) {
+                icon.className = "fa-solid fa-circle-exclamation text-red-500 text-sm";
+            } else {
+                icon.className = "fa-solid fa-circle-check text-green-400 text-sm";
+            }
+            
+            document.getElementById("toast-message").innerText = msg;
+            toast.classList.remove("opacity-0", "pointer-events-none");
+            
+            setTimeout(() => {
+                toast.classList.add("opacity-0", "pointer-events-none");
+            }, 2500);
+        }
+    </script>
+</body>
+</html>
